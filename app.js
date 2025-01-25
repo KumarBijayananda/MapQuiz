@@ -2,47 +2,48 @@
 //.setView([lat, log],zoom view)
 var map = L.map("map").setView([0, 0], 2);
 
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+L.tileLayer("https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  attribution:
-    '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 
 var popup = L.popup();
 
-function onMapClick(e) {
-  checkIfCorrect(e.latlng);
-  popup
-    .setLatLng(e.latlng)
-    .setContent("You clicked the map at " + e.latlng.toString())
-    .openOn(map);
-  console.log(e.latlng);
+async function onMapClick(e) {
+  const ans = await checkIfCorrect(e.latlng);
+  if (ans) {
+    popup.setLatLng(e.latlng).setContent("Your Answer is Correct ").openOn(map);
+  } else {
+    popup.setLatLng(e.latlng).setContent("Your Answer is Incorrect ").openOn(map);
+  }
+
   //   var marker = L.marker(e.latlng).addTo(map);
 }
 map.on("click", onMapClick);
 
 //---------------------js for map end ---------------------------
 
-let countryList = getCountryList();
-let countryCode = "";
+let countryList = getCountryList(); //populates the country list 
+let countryCode = "";   //variable to hold the country code
 const startButton = document.getElementById("startButton");
-// const hintList=document.querySelectorAll("hint")
+const hintList = document.querySelectorAll("hint");
 const hint1 = document.getElementById("hint1");
 const hint2 = document.getElementById("hint2");
 const hint3 = document.getElementById("hint3");
 
 startButton.addEventListener("click", startGame);
 
+//
 async function startGame() {
-  const countryIndex = Math.floor(Math.random() * countryList.length);
-  country = countryList[countryIndex].name.common;
-  countryCode = countryList[countryIndex].cca2;
-  console.log("here is the country code: "+countryCode);
-  countryList.splice(countryIndex, 1);
+  hint1.innerHTML=hint2.innerHTML=hint3.innerHTML="";       //clear previous hints
 
-  const countryInfo = await getInfo(country);
-  console.log(countryInfo[0].name.common);
+  const countryIndex = Math.floor(Math.random() * countryList.length);  //get a random number
+  country = countryList[countryIndex].name.common;    //use the random number to get a random country
+  countryCode = countryList[countryIndex].cca2;  //set the country code to check answer later
+  countryList.splice(countryIndex, 1); //remove the country from the array so it doesn't appear again
 
+  const countryInfo = await getInfo(country);   //get info about the country
+
+  //use country info to display for hints
   const flag = document.createElement("img");
   flag.src = countryInfo[0].flags.png;
   hint1.appendChild(flag);
@@ -60,12 +61,7 @@ async function startGame() {
   hint2.appendChild(population);
 }
 
-// function getCountry() {
-//   const setCountry = countryList[Math.floor(Math.random() * 250)].name.common;
-//   //   console.log(setCountry);
-//   return setCountry;
-// }
-
+//function to get all the country list, this is only called once when the page loads
 async function getCountryList() {
   try {
     const response = await fetch(
@@ -80,6 +76,7 @@ async function getCountryList() {
   }
 }
 
+//function to get the country info
 async function getInfo(country) {
   try {
     const response = await fetch(
@@ -93,15 +90,18 @@ async function getInfo(country) {
   }
 }
 
+
+//this is called when user clicks on the map to see if the answer is correct
 async function checkIfCorrect(e) {
-  console.log(`LAT: ${e.lat} and LONG: ${e.lng}`);
 
   try {
     const response = await fetch(
       `http://api.geonames.org/countryCodeJSON?lat=${e.lat}&lng=${e.lng}&username=kumarbijayananda`
     );
     const data = await response.json();
-    console.log(data.countryName);
+
+    return data.countryCode === countryCode?true:false; //return true if codes are the same else false
+    
   } catch (error) {
     console.log("Error from checkIfCorrect:" + error);
   }
