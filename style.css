@@ -22,3 +22,14 @@ button {
   cursor: pointer;
   transition: all ease 0.2s;
 }
+#gameContainer {
+  border: solid red;
+}
+.scoreboard {
+  border: solid green;
+  display: flex;
+  justify-content: space-evenly;
+  background-color: wheat;
+  color: black;
+  margin-top: 2px;
+}
