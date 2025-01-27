@@ -6,10 +6,8 @@ const infoDiv = document.getElementById("question");
 //.setView([lat, log],zoom view)
 var map = L.map("map").setView([0, 0], 2);
 
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+L.tileLayer("https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  attribution:
-    '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 
 var popup = L.popup();
@@ -26,8 +24,8 @@ map.on("click", onMapClick);
 
 //---------------------js for map end ---------------------------
 
-let countryList = getCountryList();
-
+let countryList = getCountryList(); //populates the country list
+let countryCode = ""; //variable to hold the country code
 const startButton = document.getElementById("startButton");
 // const hintList=document.querySelectorAll("hint")
 const hint1 = document.getElementById("hint1");
@@ -44,6 +42,7 @@ const playerAttempts = document.getElementById("hints");
 
 startButton.addEventListener("click", startGame);
 
+//
 async function startGame() {
   infoDiv.innerHTML = "";
   hint1.innerHTML = "";
@@ -107,7 +106,7 @@ window.onLoad = onLoad();
 async function getCountryList() {
   try {
     const response = await fetch(
-      `https://restcountries.com/v3.1/all?fields=name`
+      `https://restcountries.com/v3.1/all?fields=name,cca2`
     );
     const data = await response.json();
     countryList = data;
@@ -118,6 +117,7 @@ async function getCountryList() {
   }
 }
 
+//function to get the country info
 async function getInfo(country) {
   try {
     const response = await fetch(
@@ -128,5 +128,19 @@ async function getInfo(country) {
     return data;
   } catch (error) {
     console.log(`Error : ${error}`);
+  }
+}
+
+//this is called when user clicks on the map to see if the answer is correct
+async function checkIfCorrect(e) {
+  try {
+    const response = await fetch(
+      `http://api.geonames.org/countryCodeJSON?lat=${e.lat}&lng=${e.lng}&username=kumarbijayananda`
+    );
+    const data = await response.json();
+
+    return data.countryCode === countryCode ? true : false; //return true if codes are the same else false
+  } catch (error) {
+    console.log("Error from checkIfCorrect:" + error);
   }
 }
